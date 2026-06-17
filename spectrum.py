@@ -319,6 +319,7 @@ class spectra:
     __fit = None
     __params = np.full(0, None)
     __mean_params = np.full(0, None)
+    __shift_offset = np.zeros(0)
 
     def __init__(self):
         return None
@@ -384,6 +385,7 @@ class spectra:
                   + msg)
             raise ValueError
         self.__data = data_temp
+        self.__shift_offset = np.zeros(self.__data.shape[0])
         return self.__data
 
 # #############################################################################
@@ -405,6 +407,7 @@ class spectra:
 
     def set_spectrums(self, spectrums):
         self.__data = np.array([s.data for s in spectrums]).transpose(1, 2, 0)
+        self.__shift_offset = np.zeros(self.__data.shape[0])
         return
 
     def read_from_files(self, files, mode='t', rename=''):
@@ -452,6 +455,7 @@ class spectra:
                         )
             data_tot.append(data)
         self.__data = np.array(data_tot).transpose(1, 2, 0)
+        self.__shift_offset = np.zeros(self.__data.shape[0])
         if rename != '':
             self.__name = str(rename)
         return
@@ -579,4 +583,13 @@ class spectra:
             self.__params[:, :, i] = np.concatenate(
                     np.atleast_2d(popt, perr)
                     ).transpose(1, 0)
+        return
+
+    def shift_axis(self, offset, spc=None):
+        if spc is None:
+            self.__data[:, 0, :] += offset
+            self.__shift_offset += offset
+            return
+        self.__data[:, 0, spc] += offset
+        self.__shift_offset[spc] += offset
         return
