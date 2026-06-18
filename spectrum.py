@@ -320,6 +320,7 @@ class spectra:
     __params = np.full(0, None)
     __mean_params = np.full(0, None)
     __shift_offset = np.zeros(0)
+    __norm = np.zeros(0)
 
     def __init__(self):
         return None
@@ -350,7 +351,11 @@ class spectra:
 
     @property
     def mean_data(self):
-        return self.__mean.copy()
+        return self.__mean_data.copy()
+
+    @property
+    def mean_params(self):
+        return self.__mean_params.copy()
 
     @property
     def bkg_fit(self):
@@ -470,7 +475,7 @@ class spectra:
                 )
         return self.__mean_data
 
-    def comput_mean_params(self):
+    def compute_mean_params(self):
         self.__mean_params = self.__params.mean(axis=2)
         return self.__mean_params
 
@@ -593,3 +598,23 @@ class spectra:
         self.__data[:, 0, spc] += offset
         self.__shift_offset[spc] += offset
         return
+
+    def normalize(self, norm_min=True, norm_max=True):
+        if norm_max:
+            max_val = self.__data[:, 1, :].max(axis=0)
+            min_val = self.__data[:, 1, :].min(axis=0)
+            factor = 1 / (max_val - min_val)
+            if norm_min:
+                offset = min_val
+            else:
+                offset = np.zeros_like(factor)
+            self.__data[:, 1, :] = (self.__data[:, 1, :] - offset) * factor
+            self.__data[:, 2, :] = (self.__data[:, 2, :] - offset) * factor
+            self.__norm = np.concatenate(
+                    np.atleast_2d(factor, offset)
+                    ).transpose(1, 0)
+            return
+        msg = '"norm_max set to False is not yet implemented.'
+        print('[' + '\033[1m\033[33m' + ' ERROR ' + '\033[0m' + ']> '
+              + msg)
+        raise NotImplementedError
