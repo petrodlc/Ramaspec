@@ -1,313 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-# import pathlib as pth
-import inspect
 import scipy as sc
-
-
-class spectrum:
-    __name = ""
-    __shift = np.empty(0)
-    __count = np.empty(0)
-    __bkg = np.empty(0)
-    __bkg_fit = np.empty(0)
-    __fit = np.empty(0)
-    __bkg_params = np.empty(0)
-    __params = np.empty(0)
-
-    def __init__(self, name=''):
-        self.__name = str(name)
-        return None
-
-# #############################################################################
-# ####################### GETTERS / SETTERS / DELETERS ########################
-# #############################################################################
-
-    @property
-    def name(self):
-        return self.__name
-
-    @property
-    def shift(self):
-        return self.__shift.copy()
-
-    @property
-    def count(self):
-        return self.__count.copy()
-
-    @property
-    def bkg(self):
-        return self.__bkg.copy()
-
-    @property
-    def data(self):
-        return np.concatenate(
-            (np.reshape(self.__shift, (self.__shift.shape[0], 1)),
-             np.reshape(self.__count, (self.__count.shape[0], 1)),
-             np.reshape(self.__bkg, (self.__bkg.shape[0], 1))),
-            axis=1
-            )
-
-    @property
-    def bkg_fit(self):
-        return self.__bkg_fit
-
-    @property
-    def bkg_params(self):
-        return self.__bkg_params.copy()
-
-    @property
-    def fit(self):
-        return self.__fit
-
-    @property
-    def params(self):
-        return self.__params.copy()
-
-# #############################################################################
-
-    @name.setter
-    def name(self, name):
-        self.__name = str(name)
-        return self.name
-
-    @shift.setter
-    def shift(self, shift):
-        shift_temp = np.array(shift, copy=True)
-        if shift_temp.shape != self.__count.shape:
-            msg = 'Array shapes do not match'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        if len(shift_temp.shape) != 1:
-            msg = 'Array should be one dimensional'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__shift = shift_temp
-        return self.__shift
-
-    @count.setter
-    def count(self, count):
-        count_temp = np.array(count, copy=True)
-        if self.__shift.shape != count_temp.shape:
-            msg = 'Array shapes do not match'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        if len(count_temp.shape) != 1:
-            msg = 'Array should be one dimensional'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__count = count_temp
-        return self.__count
-
-    @bkg.setter
-    def bkg(self, bkg):
-        bkg_temp = np.array(bkg, copy=True)
-        if self.__shift.shape != bkg_temp.shape:
-            msg = 'Array shapes do not match'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        if len(bkg_temp.shape) != 1:
-            msg = 'Array should be one dimensional'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__bkg = bkg_temp
-        return self.__bkg
-
-    @data.setter
-    def data(self, data):
-        shift_temp = np.array(data[:, 0], copy=True)
-        count_temp = np.array(data[:, 1], copy=True)
-        bkg_temp = np.array(data[:, 2], copy=True)
-        if shift_temp.shape != count_temp.shape \
-                or shift_temp.shape != bkg_temp.shape:
-            msg = 'Array shapes do not match'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        if len(shift_temp.shape) != 1:
-            msg = 'Arrays should be one dimensional'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__shift = shift_temp
-        self.__count = count_temp
-        self.__bkg = bkg_temp
-        return self.data
-
-    @bkg_fit.setter
-    def bkg_fit(self, bkg_fit):
-        sig = inspect.signature(bkg_fit)
-        if len(sig.parameters) != 2:
-            msg = 'The fit function should take two arguments: ' \
-                    'the variable and an array of parameters.'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__bkg_fit = bkg_fit
-        return self.__bkg_fit
-
-    @bkg_params.setter
-    def bkg_params(self, bkg_params):
-        bkg_params_temp = np.array(bkg_params, copy=True)
-        if len(bkg_params.shape) != 1:
-            msg = 'Parameters array should be one dimensional'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__bkg_params = bkg_params_temp
-        return self.__bkg_params
-
-    @fit.setter
-    def fit(self, fit):
-        sig = inspect.signature(fit)
-        if len(sig.parameters) != 2:
-            msg = 'The fit function should take two arguments: ' \
-                    'the variable and an array of parameters.'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__fit = fit
-        return self.__fit
-
-    @params.setter
-    def params(self, params):
-        params_temp = np.array(params, copy=True)
-        if len(params.shape) != 1:
-            msg = 'Parameters array should be one dimensional'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            raise ValueError
-        self.__params = params_temp
-        return self.__params
-
-# #############################################################################
-
-    @name.deleter
-    def name(self):
-        self.__name = ''
-        return
-
-# #############################################################################
-# ################################# METHODS ###################################
-# #############################################################################
-
-    def read_from_file(self, path, mode='t', override_name=True):
-        if mode == 'b':
-            raise NotImplementedError
-        if mode != 't':
-            raise ValueError
-        with open(path, 'rt', encoding='utf-8') as file:
-            sep_data = list(map(float, file.read().split()))
-        if override_name or self.__name == '':
-            self.__name = ' '.join(path.stem.split("_"))
-        self.__count = np.array(sep_data[1::2])
-        self.__bkg = np.zeros_like(self.__count)
-        if len(sep_data) % 2:
-            self.__shift = np.array(sep_data[0:-1:2])
-            msg = 'Uneven columns, excedent value has been skipped.'
-            print('[' + '\033[1m\033[31m' + ' ERROR ' + '\033[0m' + ']> '
-                  + msg)
-            return self.data
-        self.__shift = np.array(sep_data[0::2])
-        return
-
-    def remove_bkg_linear(self, low_center, top_center, low_range, top_range):
-        low = []
-        top = []
-        for i in range(self.__shift.shape[0]):
-            shift = self.__shift[i]
-            if abs(shift - low_center) <= low_range * 0.5:
-                low.append([shift, self.__count[i]])
-            if abs(shift - top_center) <= top_range * 0.5:
-                top.append([shift, self.__count[i]])
-        low_anchor = np.array(low)
-        top_anchor = np.array(top)
-        low_anchor_mean = low_anchor.mean(axis=0)
-        top_anchor_mean = top_anchor.mean(axis=0)
-
-        slope = (top_anchor_mean[1] - low_anchor_mean[1]) / \
-                (top_anchor_mean[0] - low_anchor_mean[0])
-        height = low_anchor_mean[1] - slope * low_anchor_mean[0]
-        self.__bkg_fit = lambda x, p: p[0] * x + p[1]
-        self.__bkg_params = np.array([slope, height])
-        self.__bkg = self.__bkg_fit(self.__shift, self.__bkg_params)
-        self.__count -= self.__bkg
-        return
-
-    def fit_lbwf(self, p0=None, save=True):
-        def lorentz(w, w_max, I_max, fwhm):
-            return I_max * (fwhm / 2)**2 / ((w - w_max)**2 + (fwhm / 2)**2)
-
-        def bwf(w, w_max, I_max, fwhm, Q):
-            return I_max * (1 + (2 * (w - w_max) / (Q * fwhm))**2) / \
-                    (1 + (2 * (w - w_max) / fwhm)**2)
-
-        def lbwf(w, w_bwf, I_bwf, fwhm_bwf, Q_bwf, w_l, I_l, fwhm_l):
-            return lorentz(w, w_l, I_l, fwhm_l) \
-                    + bwf(w, w_bwf, I_bwf, fwhm_bwf, Q_bwf)
-
-        if p0 is None:
-            popt, pcov = sc.optimize.curve_fit(
-                    lbwf,
-                    self.__shift,
-                    self.__count
-                    )
-        else:
-            popt, pcov = sc.optimize.curve_fit(
-                    lbwf,
-                    self.__shift,
-                    self.__count,
-                    p0=p0
-                    )
-
-        perr = np.sqrt(np.diag(pcov))
-
-        p_fit = np.concatenate(
-                (
-                    popt.reshape((popt.shape + (1,))),
-                    perr.reshape((perr.shape + (1,)))
-                    ),
-                axis=1
-                )
-
-        if save:
-            self.__fit = lambda x, p: lbwf(x,
-                                           p[0],
-                                           p[1],
-                                           p[2],
-                                           p[3],
-                                           p[4],
-                                           p[5],
-                                           p[6])
-            self.__params = p_fit
-        return
-
-    def plot(self, to_plot=[True, False, False, False], ret=False):
-        if not np.any(to_plot):
-            return
-
-        _, ax = plt.subplots()
-
-        if to_plot[0]:
-            ax.plot(self.__shift, self.__count)
-        if to_plot[1]:
-            ax.plot(self.__shift, self.__count + self.__bkg)
-        if to_plot[2]:
-            ax.plot(self.__shift, self.__bkg)
-        if to_plot[3]:
-            ax.plot(self.__shift,
-                    self.__fit(self.__shift, self.__params[:, 0]))
-        ax.set_title(self.__name)
-        plt.show()
-        if ret:
-            return ax
-        return
 
 
 class spectra:
@@ -322,7 +14,8 @@ class spectra:
     __shift_offset = np.zeros(0)
     __norm = np.zeros(0)
 
-    def __init__(self):
+    def __init__(self, name=''):
+        self.__name = str(name)
         return None
 
 # #############################################################################
@@ -401,19 +94,9 @@ class spectra:
         self.__name = ''
         return save_name
 
-    @mean_data.deleter
-    def mean_data(self):
-        self.__mean = spectrum()
-        return
-
 # #############################################################################
 # ################################# METHODS ###################################
 # #############################################################################
-
-    def set_spectrums(self, spectrums):
-        self.__data = np.array([s.data for s in spectrums]).transpose(1, 2, 0)
-        self.__shift_offset = np.zeros(self.__data.shape[0])
-        return
 
     def read_from_files(self, files, mode='t', rename=''):
         if mode == 'b':
@@ -463,6 +146,31 @@ class spectra:
         self.__shift_offset = np.zeros(self.__data.shape[0])
         if rename != '':
             self.__name = str(rename)
+        return
+
+    def shift_x(self, shift):
+        spc = self.__data.shape[2]
+        if np.atleast_1d(shift).shape[0] != spc:
+            shift = np.full(spc, shift)
+        for i in range(spc):
+            self.__data[:, 0, i] += shift[i]
+        if self.__shift_offset.shape[0] != spc:
+            self.__shift_offset = shift
+            return
+        self.__shift_offset += shift
+        return
+
+    def set_range(self, inf, sup):
+        inf_id, sup_id = map(int, self.get_index([inf, sup])[:, 0])
+        if inf_id == sup_id:
+            msg = f'Inf and sup idices are equal ({inf_id}). ' \
+                    'Spectral range has not been modified.'
+            print('[' + '\033[1m\033[33m' + 'WARNING' + '\033[0m' + ']> '
+                  + msg)
+            return
+        self.__data = self.__data[inf_id:sup_id + 1, :, :]
+        if self.__mean_data.size != 0:
+            self.__mean_data = self.__mean_data[inf_id:sup_id + 1, :]
         return
 
     def compute_mean_data(self):
@@ -533,7 +241,7 @@ class spectra:
         if self.__data.shape[2] != self.__bkg_fit.shape[0]:
             self.__bkg_fit = np.full(self.__data.shape[2], None)
         if self.__data.shape[2] != self.__bkg_params.shape[0]:
-            self.__bkg_params = np.full(self.__data.shape[2], None)
+            self.__bkg_params = np.full((4, 2, self.__data.shape[2]), None)
         for i in range(self.__data.shape[2]):
             inf_id, sup_id = map(int, self.get_index([inf, sup], spc=i)[:, 0])
             bkg_data = np.concatenate((
@@ -551,7 +259,7 @@ class spectra:
             bkg = self.__bkg_fit[i](self.__data[:, 0, i], popt)
             self.__data[:, 1, i] -= bkg
             self.__data[:, 2, i] += bkg
-            self.__bkg_params = np.concatenate(
+            self.__bkg_params[:, :, i] = np.concatenate(
                     np.atleast_2d(popt, perr)
                     ).transpose(1, 0)
         return
@@ -617,31 +325,36 @@ class spectra:
                     ).transpose(1, 0)
         return
 
-    def shift_axis(self, offset, spc=None):
-        if spc is None:
-            self.__data[:, 0, :] += offset
-            self.__shift_offset += offset
-            return
-        self.__data[:, 0, spc] += offset
-        self.__shift_offset[spc] += offset
+    def normalize(self):
+        self.__class_width = (self.__data[-1, 0, :] - self.data[0, 0, :]) \
+                / (self.__data.shape[0] + 1)
+
+        self.__norm = np.linalg.norm(self.__data[:, 1, :], axis=0, ord=2) \
+            * self.__class_width
+
+        self.__data[:, 1, :] /= self.__norm
+        self.__data[:, 2, :] /= self.__norm
+        self.__bkg_params[:, 0] /= self.__norm
+        self.__bkg_params[:, 1, :] = (self.__bkg_params[:, 1, :]
+                                      / self.__norm)**2
         return
 
-    def normalize(self, norm_min=True, norm_max=True):
-        if norm_max:
-            max_val = self.__data[:, 1, :].max(axis=0)
-            min_val = self.__data[:, 1, :].min(axis=0)
-            factor = 1 / (max_val - min_val)
-            if norm_min:
-                offset = min_val
-            else:
-                offset = np.zeros_like(factor)
-            self.__data[:, 1, :] = (self.__data[:, 1, :] - offset) * factor
-            self.__data[:, 2, :] = (self.__data[:, 2, :] - offset) * factor
-            self.__norm = np.concatenate(
-                    np.atleast_2d(factor, offset)
-                    ).transpose(1, 0)
-            return
-        msg = '"norm_max set to False is not yet implemented.'
-        print('[' + '\033[1m\033[33m' + ' ERROR ' + '\033[0m' + ']> '
-              + msg)
-        raise NotImplementedError
+    # def normalize(self, norm_min=True, norm_max=True):
+    #     if norm_max:
+    #         max_val = self.__data[:, 1, :].max(axis=0)
+    #         min_val = self.__data[:, 1, :].min(axis=0)
+    #         factor = 1 / (max_val - min_val)
+    #         if norm_min:
+    #             offset = min_val
+    #         else:
+    #             offset = np.zeros_like(factor)
+    #         self.__data[:, 1, :] = (self.__data[:, 1, :] - offset) * factor
+    #         self.__data[:, 2, :] = (self.__data[:, 2, :] - offset) * factor
+    #         self.__norm = np.concatenate(
+    #                 np.atleast_2d(factor, offset)
+    #                 ).transpose(1, 0)
+    #         return
+    #     msg = '"norm_max set to False is not yet implemented.'
+    #     print('[' + '\033[1m\033[33m' + ' ERROR ' + '\033[0m' + ']> '
+    #           + msg)
+    #     raise NotImplementedError
