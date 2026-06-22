@@ -529,6 +529,29 @@ class spectra:
         self.__bkg_params[index] = np.array(bkg_params).transpose(1, 0)
         return
 
+    def remove_bkg_poly(self, inf, sup):
+        for i in range(self.__data.shape[2]):
+            inf_id, sup_id = map(int, self.get_index([inf, sup], spc=i)[:, 0])
+            bkg_data = np.concatenate((
+                self.__data[:inf_id+1, :, i],
+                self.__data[sup_id:, :, i]
+                ))
+
+            def polyfit(x, a_0, a_1, a_2, a_3):
+                return a_0 + a_1 * x + a_2 * x**2 + a_3 * x**3
+            popt, pcov = sc.optimize.curve_fit(polyfit,
+                                               bkg_data[:, 0],
+                                               bkg_data[:, 1])
+            perr = np.sqrt(np.diag(pcov))
+            self.__fit[i] = lambda x, p: polyfit(x, p[0], p[1], p[2], p[3])
+            bkg = self.__fit[i](self.__data[:, 0, i], popt)
+            self.__data[:, 1, i] -= bkg
+            self.__data[:, 2, i] += bkg
+            self.__bkg_params = np.concatenate(
+                    np.atleast_2d(popt, perr)
+                    ).transpose(1, 0)
+        return
+
     def get_index(self, values, spc=0, col=0):
         arr = self.__data[:, col, spc]
         n = len(values)
