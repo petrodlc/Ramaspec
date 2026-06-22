@@ -10,8 +10,8 @@ class spectrum:
     __shift = np.empty(0)
     __count = np.empty(0)
     __bkg = np.empty(0)
-    __bkg_fit = None
-    __fit = None
+    __bkg_fit = np.empty(0)
+    __fit = np.empty(0)
     __bkg_params = np.empty(0)
     __params = np.empty(0)
 
@@ -314,9 +314,9 @@ class spectra:
     __name = ''
     __data = np.full(0, None)
     __mean_data = np.full(0, None)
-    __bkg_fit = None
+    __bkg_fit = np.full(0, None)
     __bkg_params = np.full(0, None)
-    __fit = None
+    __fit = np.full(0, None)
     __params = np.full(0, None)
     __mean_params = np.full(0, None)
     __shift_offset = np.zeros(0)
@@ -429,7 +429,7 @@ class spectra:
                   + msg)
             raise ValueError
         data_tot = []
-        for file in files:
+        for file in np.atleast_1d(files):
             with open(file, 'rt', encoding='utf-8') as f:
                 sep_data = np.array(
                         [[float(v) for v in line.split()] for line in f]
@@ -530,6 +530,10 @@ class spectra:
         return
 
     def remove_bkg_poly(self, inf, sup):
+        if self.__data.shape[2] != self.__bkg_fit.shape[0]:
+            self.__bkg_fit = np.full(self.__data.shape[2], None)
+        if self.__data.shape[2] != self.__bkg_params.shape[0]:
+            self.__bkg_params = np.full(self.__data.shape[2], None)
         for i in range(self.__data.shape[2]):
             inf_id, sup_id = map(int, self.get_index([inf, sup], spc=i)[:, 0])
             bkg_data = np.concatenate((
@@ -543,8 +547,8 @@ class spectra:
                                                bkg_data[:, 0],
                                                bkg_data[:, 1])
             perr = np.sqrt(np.diag(pcov))
-            self.__fit[i] = lambda x, p: polyfit(x, p[0], p[1], p[2], p[3])
-            bkg = self.__fit[i](self.__data[:, 0, i], popt)
+            self.__bkg_fit[i] = lambda x, p: polyfit(x, p[0], p[1], p[2], p[3])
+            bkg = self.__bkg_fit[i](self.__data[:, 0, i], popt)
             self.__data[:, 1, i] -= bkg
             self.__data[:, 2, i] += bkg
             self.__bkg_params = np.concatenate(
