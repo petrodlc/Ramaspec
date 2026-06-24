@@ -237,6 +237,10 @@ class spectra:
             self.__name = str(rename)
         return
 
+    def write_to_files(files):
+        raise NotImplementedError
+        return
+
     def shift_x(self, xoffset):
         n_spc = self.__data.shape[2]
         if np.atleast_1d(xoffset).shape[0] != n_spc:
