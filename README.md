@@ -1,4 +1,4 @@
-A few python files that provide useful utilities to process Ramam spectrums
+A few python files that provide useful utilities to process Raman spectrums
 
 # Installation
 
