@@ -140,7 +140,7 @@ class spectra:
 
     @bkg_params.deleter
     def bkg_params(self):
-        self.__bkg_params = np.full((4, 2, self.__data.shape[2]), None)
+        self.__bkg_params = np.full((0, 2, self.__data.shape[2]), None)
         return
 
     @fit_params.deleter
@@ -155,12 +155,12 @@ class spectra:
 
     @mean_bkg_params.deleter
     def mean_bkg_params(self):
-        self.__mean_bkg_params = np.full((4, 2, 2), None)
+        self.__mean_bkg_params = np.full((0, 2, 2), None)
         return
 
     @mean_fit_params.deleter
     def mean_fit_params(self):
-        self.__mean_fit_params = np.full((4, 2, 2), None)
+        self.__mean_fit_params = np.full((8, 2, 2), None)
         return
 
     @xoffset.deleter
