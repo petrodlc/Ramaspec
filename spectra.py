@@ -3,13 +3,31 @@ import scipy as sc
 
 
 class spectra:
+    '''
+    Array with multiple spectrums information
+
+    ...
+
+    Attributes
+    ----------
+    name
+    data
+    bkg_params
+    fit_params
+    mean_data
+    mean_bkg_params
+    mean_fit_params
+    xoffset
+    norm
+
+    '''
     __name = ''
     __data = np.full(0, None)
     __bkg_params = np.full((0, 2, 0), 0)
     __fit_params = np.full((8, 2, 0), 0)
     __mean_data = np.full(0, None)
-    __mean_bkg_params = np.full(0, None)
-    __mean_fit_params = np.full(0, None)
+    __mean_bkg_params = np.full((0, 2, 0), None)
+    __mean_fit_params = np.full((8, 2, 0), None)
     __xoffset = np.zeros(0)
     __norm = np.ones(0)
 
@@ -27,6 +45,25 @@ class spectra:
 
     @property
     def name(self):
+        '''
+        Name access
+
+        Get, set or delete the name of this `spectra` instance
+
+        Parameters
+        ----------
+        name : str or with ``__str__`` implemented
+            the name to give
+
+        Returns
+        -------
+        str
+            the name of this `spectra` instance
+
+        Notes
+        -----
+        Delete `name` will set it to an empty ``str``
+        '''
         return self.__name
 
     @property

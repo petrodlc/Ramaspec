@@ -56,6 +56,9 @@ import matplotlib.pyplot as plt
 For matplotlib usage, check its [documentation](https://matplotlib.org/stable/api/pyplot_summary.html#module-matplotlib.pyplot).
 
 ## spectra
+
+/!\ This section will be moved to docstrings
+
 This class is intended to store and process multiple spectrums.
 
 ### properties
