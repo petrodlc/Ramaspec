@@ -20,6 +20,18 @@ git clone https://github.com/petrodlc/Ramaspec.git
 git pull
 ```
 
+## Switching between versions
+
+To switch to `dev` (unstable) version:
+```shell
+git checkout dev
+```
+
+and go back to stable:
+```shell
+git checkout main
+```
+
 ## uninstall
 
 remove directory
