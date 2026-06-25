@@ -5,7 +5,9 @@ A few python files that provide useful utilities to process Ramam spectrums
 ## Install
 clone from GitHub:
 
+```
 git clone https://github.com/petrodlc/Ramaspec.git
+```
 
 ## dependencies
 - numpy
@@ -14,7 +16,9 @@ git clone https://github.com/petrodlc/Ramaspec.git
 
 ## update
 
+```
 git pull
+```
 
 ## uninstall
 
@@ -24,4 +28,6 @@ remove directory
 
 import python files in your script, or from python console for live processing
 
+```python
 import spectra as sp
+```
