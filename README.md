@@ -5,7 +5,7 @@ A few python files that provide useful utilities to process Ramam spectrums
 ## Install
 clone from GitHub:
 
-```
+```shell
 git clone https://github.com/petrodlc/Ramaspec.git
 ```
 
@@ -16,13 +16,16 @@ git clone https://github.com/petrodlc/Ramaspec.git
 
 ## update
 
-```
+```shell
 git pull
 ```
 
 ## uninstall
 
 remove directory
+```shell
+rm /path/to/directory
+```
 
 # Usage
 
