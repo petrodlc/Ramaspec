@@ -382,7 +382,8 @@ class spectra:
         self.__mean_bkg_params = numpy.concatenate(
                 numpy.atleast_2d(
                     self.__bkg_params[:, 0, :].mean(axis=1),
-                    (self.__bkg_params[:, 1, :]**2).sum(axis=1)
+                    numpy.sqrt((self.__bkg_params[:, 1, :]**2).sum(axis=1))
+                    / self.__bkg_params.shape[2]
                     )
                 ).transpose(1, 0)
         return
@@ -391,7 +392,8 @@ class spectra:
         self.__mean_fit_params = numpy.concatenate(
                 numpy.atleast_2d(
                     self.__fit_params[:, 0, :].mean(axis=1),
-                    (self.__fit_params[:, 1, :]**2).sum(axis=1)
+                    numpy.sqrt((self.__fit_params[:, 1, :]**2).sum(axis=1))
+                    / self.__fit_params.shape[2]
                     )
                 ).transpose(1, 0)
         return

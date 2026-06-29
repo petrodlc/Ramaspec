@@ -9,7 +9,7 @@ from constants import p0, files, files_c, files_cs, xoffsets, classed
 
 def preprocess(s: sp.spectra, xoffset: float):
     s.shift_x(520.7 - xoffset)
-    s.remove_bkg_poly(1100, 1900)
+    s.remove_bkg_poly(900, 1900)
     s.normalize()
     return
 
