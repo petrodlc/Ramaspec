@@ -1,5 +1,6 @@
 import numpy as np
 import pathlib as pth
+import spectra as sp
 
 # with p0[3] = Q
 # p0 = np.array([[1598, 4.7e-2, 79, -9.4e10, 1366, 3.8e-2, 332, -5.3e-3]])
@@ -22,11 +23,12 @@ for meteorite in [
         'MET01070',
         'Murchison',
         # CR
-        'DOM10085',
         'EET92042',
         'GRA95229',
         'MET00426',
         'QUE99177'
+        # CV
+        # 'DOM10085',
         ]:
     directory = data_directory / meteorite / 'exports'
     files[meteorite] = sorted(directory.glob(meteorite + '_405_*.txt'))
@@ -351,3 +353,10 @@ for met in files.keys():
                 int(path.stem.split('_')[-1][-1])]
             not in exclude_strict[met]
             ]
+
+spc = dict([
+    [t,
+     dict([
+         [name, sp.spectra(name=name, files=files_cs[name])] for name in classed['old'][t]
+         ])] for t in classed['old'].keys()
+    ])

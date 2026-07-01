@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # import pathlib as pth
 
 import spectra as sp
-from constants import p0, files, files_c, files_cs, xoffsets, classed
+from constants import p0, files, files_c, files_cs, xoffsets, classed, spc
 
 
 def preprocess(s: sp.spectra, xoffset: float):
@@ -24,6 +24,13 @@ def compute_data(s: sp.spectra):
 
 def get_all():
     return [sp.spectra(name=name, files=files[name]) for name in files.keys()]
+
+
+def process_dict(spc):
+    for t in spc.keys():
+        for name, s in spc[t].items():
+            preprocess(s, xoffsets[name])
+            compute_data(s)
 
 
 def cmp_params(spc, xparam, yparam, xdiv=None, ydiv=None):
@@ -112,6 +119,79 @@ def cmp_params(spc, xparam, yparam, xdiv=None, ydiv=None):
                   else (f' ({py[2][1:-1]} / {divy[2][1:-1]})'
                         if py[2] != '' and divy[2] != ''
                         else f' {py[2]}{divy[2]}'))))
+    plt.get_current_fig_manager().full_screen_toggle()
+    plt.show()
+    return
+
+
+def plot_params(spc_dict):
+    params = {'G peak': [[], []],
+              'Ig': [[], []],
+              'FWHMg': [[], []],
+              '1/Q': [[], []],
+              'D peak': [[], []],
+              'Id': [[], []],
+              'FWHMd': [[], []],
+              'offset': [[], []],
+              'bkg0': [[], []],
+              'bkg1': [[], []],
+              'bkg2': [[], []],
+              'bkg3': [[], []]}
+    color = {'CI': 'blue', 'CM': 'orange', 'CR': 'gray'}
+    legend_entries = [
+            plt.Line2D([0], [0], color=color['CI'], marker='|', label='CI'),
+            plt.Line2D([0], [0], color=color['CM'], marker='|', label='CM'),
+            plt.Line2D([0], [0], color=color['CR'], marker='|', label='CR')
+            ]
+    for t in spc_dict.keys():
+        for s in spc_dict[t].values():
+            k = list(params.keys())
+            for i in range(8):
+                params[k[i]][0].append(s.mean_fit_params[i])
+                params[k[i]][1].append(t)
+            for i in range(4):
+                params[k[i + 8]][0].append(s.mean_bkg_params[i])
+                params[k[i + 8]][1].append(t)
+    for p in params.keys():
+        params[p][0] = np.array(params[p][0])
+        params[p][1] = np.array(params[p][1])
+    ax = plt.axes([0.05, 0.05, 0.99 - 0.05, 0.95 - 0.05])
+    for i in range(len(k)):
+        p = params[k[i]]
+        x_min = np.min(p[0][:, 0] - p[0][:, 1])
+        x_max = np.max(p[0][:, 0] + p[0][:, 1])
+        norm = 1 / (x_max - x_min)
+        ax.plot([0, 1], [i] * 2, 'black',
+                linestyle='none', marker='|', markersize=15, alpha=0.4)
+        ax.annotate(f'{x_min:.2e}',
+                    (0, i), xytext=(0, -15), textcoords='offset points',
+                    ha='center', alpha=0.4)
+        if i != len(k) - 1:
+            ax.annotate(f'{x_max:.2e}',
+                        (1, i), xytext=(0, -15), textcoords='offset points',
+                        ha='center', alpha=0.4)
+        else:
+            ax.annotate(f'{x_max:.2e}',
+                        (1, i), xytext=(0, -15), textcoords='offset points',
+                        ha='right', alpha=0.4)
+        if x_min * x_max < 0:
+            ax.plot([-x_min * norm], [i], 'black',
+                    marker='|', markersize=15, alpha=0.4)
+            ax.annotate('0',
+                        (-x_min * norm, i),
+                        xytext=(0, 15), textcoords='offset points',
+                        ha='center', alpha=0.4)
+        for j in range(p[0].shape[0]):
+            x = (p[0][j, 0] - x_min) * norm
+            y = i
+            xerr = p[0][j, 1] * norm
+            ax.errorbar(x, y, xerr=xerr, color=color[p[1][j]], marker='|')
+    ax.set_xticks([])
+    ax.set_yticks(np.arange(len(k)), labels=k)
+    ax.grid(alpha=0.4)
+    ax.legend(handles=legend_entries)
+    ax.set_title('General parameters comparison')
+    ax.set_xlabel('Values (normalized)')
     plt.get_current_fig_manager().full_screen_toggle()
     plt.show()
     return
