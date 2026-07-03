@@ -197,12 +197,12 @@ class spectra:
 
     @mean_bkg_params.deleter
     def mean_bkg_params(self):
-        self.__mean_bkg_params = numpy.full((0, 2, 2), None)
+        self.__mean_bkg_params = numpy.full((0, 2, 3), None)
         return
 
     @mean_fit_params.deleter
     def mean_fit_params(self):
-        self.__mean_fit_params = numpy.full((8, 2, 2), None)
+        self.__mean_fit_params = numpy.full((8, 2, 3), None)
         return
 
     @xoffset.deleter
@@ -383,7 +383,8 @@ class spectra:
                 numpy.atleast_2d(
                     self.__bkg_params[:, 0, :].mean(axis=1),
                     numpy.sqrt((self.__bkg_params[:, 1, :]**2).sum(axis=1))
-                    / self.__bkg_params.shape[2]
+                    / self.__bkg_params.shape[2],
+                    self.__bkg_params[:, 0, :].std(axis=1)
                     )
                 ).transpose(1, 0)
         return
@@ -393,7 +394,8 @@ class spectra:
                 numpy.atleast_2d(
                     self.__fit_params[:, 0, :].mean(axis=1),
                     numpy.sqrt((self.__fit_params[:, 1, :]**2).sum(axis=1))
-                    / self.__fit_params.shape[2]
+                    / self.__fit_params.shape[2],
+                    self.__fit_params[:, 0, :].std(axis=1)
                     )
                 ).transpose(1, 0)
         return
