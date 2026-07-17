@@ -1,0 +1,35 @@
+title: Ramaspec
+description: A starter template for a Jeykll site using the Just the Docs theme!
+theme: just-the-docs
+
+# logo: "/assets/img/logo.jpg"
+
+url: https://petrodlc.github.io/test
+
+aux_links:
+  Template Repository: https://github.com/petrodlc/Ramaspec
+
+color_scheme: light
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+search:
+    focus_shortcut_key: 'k'
+
+callouts:
+  highlight:
+    color: yellow
+  important:
+    title: Important
+    color: blue
+  new:
+    title: New
+    color: green
+  note:
+    title: Note
+    color: purple
+  warning:
+    title: Warning
+    color: red
+

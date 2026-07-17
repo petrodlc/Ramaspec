@@ -3,45 +3,34 @@ __all__ = [
         ]
 
 
-import numpy    # as np
-import scipy    # as sc
+import numpy
+import scipy
+import log
 
 
 class spectra:
-    '''
-    Array with multiple spectrums information
-
-    ...
-
-    Attributes
-    ----------
-    name
-    data
-    bkg_params
-    fit_params
-    mean_data
-    mean_bkg_params
-    mean_fit_params
-    xoffset
-    norm
-
-    '''
-    __name = ''
-    __data = numpy.full(0, None)
-    __bkg_params = numpy.full((0, 2, 0), 0)
-    __fit_params = numpy.full((8, 2, 0), 0)
-    __mean_data = numpy.full(0, None)
-    __mean_bkg_params = numpy.full((0, 2, 0), None)
-    __mean_fit_params = numpy.full((8, 2, 0), None)
-    __xoffset = numpy.zeros(0)
-    __norm = numpy.ones(0)
-
     def __init__(self,
-                 name='',
-                 files=[]):
+                 name: str = '',
+                 files: list = [],
+                 log_level: int = 1):
         self.__name = str(name)
+
         if len(files) != 0:
             self.read_from_files(files)
+        else:
+            self.__data = numpy.full(0, None)
+
+        self.__bkg_params = numpy.full((0, 2, 0), 0)
+        self.__fit_params = numpy.full((8, 2, 0), 0)
+        self.__mean_data = numpy.full(0, None)
+        self.__mean_bkg_params = numpy.full((0, 2, 0), None)
+        self.__mean_fit_params = numpy.full((8, 2, 0), None)
+        self.__xoffset = numpy.zeros(0)
+        self.__norm = numpy.ones(0)
+        self.__log = log.log()
+
+        self.__log.info('\'spectra\' instance initialized.')
+
         return None
 
 # #############################################################################
@@ -50,25 +39,6 @@ class spectra:
 
     @property
     def name(self):
-        '''
-        Name access
-
-        Get, set or delete the name of this `spectra` instance
-
-        Parameters
-        ----------
-        name : str or with ``__str__`` implemented
-            the name to give
-
-        Returns
-        -------
-        str
-            the name of this `spectra` instance
-
-        Notes
-        -----
-        Delete `name` will set it to an empty ``str``
-        '''
         return self.__name
 
     @property
@@ -138,6 +108,10 @@ class spectra:
     def norm(self):
         return self.__norm.copy()
 
+    @property
+    def log(self):
+        return self.__log
+
 # #############################################################################
 
     @name.setter
@@ -149,7 +123,6 @@ class spectra:
     def data(self, data):
         data_temp = numpy.array(data, copy=True)
         if len(data.shape) != 3 or data.shape[1] != 3:
-            # OSKOUR
             raise ValueError
         self.__data = data_temp
         del self.bkg_params
@@ -197,12 +170,12 @@ class spectra:
 
     @mean_bkg_params.deleter
     def mean_bkg_params(self):
-        self.__mean_bkg_params = numpy.full((0, 2, 3), None)
+        self.__mean_bkg_params = numpy.full((0, 3), None)
         return
 
     @mean_fit_params.deleter
     def mean_fit_params(self):
-        self.__mean_fit_params = numpy.full((8, 2, 3), None)
+        self.__mean_fit_params = numpy.full((8, 3), None)
         return
 
     @xoffset.deleter
@@ -241,12 +214,30 @@ class spectra:
         numpy.array(p, copy=True).resize(8)
         return self.__bwf(x, p[:4]) + self.__lorentz(x, p[4:7]) + p[7]
 
+    def __get_index(self, values, spc=0, col=0):
+        arr = self.__data[:, col, spc]
+        n = len(values)
+        indices = numpy.zeros(n, dtype=numpy.int64)
+        diffs = numpy.array([arr[0] - v for v in values])
+        for i in range(1, arr.size):
+            val = arr[i]
+            for j in range(n):
+                diff = val - values[j]
+                if abs(diff) < abs(diffs[j]):
+                    indices[j], diffs[j] = i, diff
+        return indices, diffs
+
     def read_from_files(self, files, mode='t', rename=None):
         if mode == 'b':
-            # OSKOUR
+            self.__log.error(
+                '\'b\' mode for file reading is not yet implemented.'
+                'Please use \'t\' instead.'
+            )
             raise NotImplementedError
         if mode != 't':
-            # OSKOUR
+            self.__log.error(
+                f'Unknown mode \'{mode}\' for file reading.'
+            )
             raise ValueError
         data_tot = []
         for file in numpy.atleast_1d(files):
@@ -255,7 +246,9 @@ class spectra:
                         [[float(v) for v in line.split()] for line in f]
                         )
             if not sep_data.size:
-                # OSKOUR
+                self.__log.warning(
+                    f'File \'{file}\' is empty an has been skipped.'
+                )
                 continue
             if len(sep_data.shape) == 1 or sep_data.shape[1] == 1:
                 data = numpy.concatenate(
@@ -296,12 +289,18 @@ class spectra:
         return
 
     def set_range(self, inf, sup):
-        inf_id, sup_id = self.get_index([inf, sup])[0]
+        inf_id, sup_id = self.__get_index([inf, sup])[0]
         if inf_id == sup_id:
-            # OSKOUR
+            self.__log.warning(
+                'Trying to remove all but an empty range '
+                f'(inf_id = {inf_id} an sup_id = {sup_id}. '
+                'Function has been aborted. '
+                'Use \'del\' keyword to suppress data.'
+
+            )
             return
         self.__data = self.__data[inf_id:sup_id + 1, :, :]
-        self.__mean_data = self.__mean_data[inf_id:sup_id, :, :]
+        self.__mean_data = self.__mean_data[inf_id:sup_id + 1, :, :]
         return
 
     def remove_bkg_poly(self, inf, sup, ord=3, p0=None):
@@ -309,7 +308,7 @@ class spectra:
             p0 = numpy.ones(ord + 1)
         params = []
         for i in range(self.__data.shape[2]):
-            inf_id, sup_id = self.get_index([inf, sup], spc=i)[0]
+            inf_id, sup_id = self.__get_index([inf, sup], spc=i)[0]
             bkg_data = numpy.concatenate((
                 self.__data[:inf_id + 1, :, i],
                 self.__data[sup_id:, :, i]
@@ -341,16 +340,19 @@ class spectra:
         self.__bkg_params[:, 1, :] = abs(
                 self.__bkg_params[:, 1, :] / self.__norm
                 )
-        # normalize mean ?
+        # normalize mean?
         return
 
     def fit_lbwf(self, p0=numpy.ones(8), fit_range=None):
         fit_range = numpy.atleast_1d(fit_range)
         if fit_range.shape == (2,):
-            fit_range_id = numpy.array(self.get_index(fit_range)[0])
+            fit_range_id = numpy.array(self.__get_index(fit_range)[0])
         else:
             if fit_range is not None:
-                # OSKOUR
+                self.__log.error(
+                    'Unknown shape for \'fit_range\', '
+                    'Fit will be done on whole data.'
+                )
                 pass    # for now
             fit_range_id = numpy.array([0, self.__data.shape[0] - 1])
 
@@ -399,16 +401,3 @@ class spectra:
                     )
                 ).transpose(1, 0)
         return
-
-    def get_index(self, values, spc=0, col=0):
-        arr = self.__data[:, col, spc]
-        n = len(values)
-        indices = numpy.zeros(n, dtype=numpy.int64)
-        diffs = numpy.array([arr[0] - v for v in values])
-        for i in range(1, arr.size):
-            val = arr[i]
-            for j in range(n):
-                diff = val - values[j]
-                if abs(diff) < abs(diffs[j]):
-                    indices[j], diffs[j] = i, diff
-        return indices, diffs
